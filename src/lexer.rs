@@ -44,8 +44,6 @@ impl Lexer {
             nouns: vec!["dawg".into(), "kat".into(), "rat".into()],
         };
 
-        lexer.tokenize();
-
         lexer
     }
 
@@ -73,6 +71,10 @@ impl Lexer {
         }
 
         self.tokens.reverse();
+    }
+
+    pub fn get_next_token(&mut self) -> Option<String> {
+        self.tokens.pop()
     }
 
     pub fn is_a_article(&self, word: &str) -> bool {
