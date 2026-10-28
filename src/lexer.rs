@@ -73,8 +73,20 @@ impl Lexer {
         self.tokens.reverse();
     }
 
-    pub fn get_next_token(&mut self) -> Option<String> {
-        self.tokens.pop()
+    pub fn next(&mut self) -> String {
+        let candidate_token = self.tokens.pop().unwrap_or_default();
+
+        if self.lookup(&candidate_token) {
+            candidate_token
+        } else if self.tokens.is_empty() {
+            "".to_string()
+        } else {
+            eprintln!(
+                "A lexical error was encountered. '{}' is not a recognized token.",
+                candidate_token
+            );
+            std::process::exit(1);
+        }
     }
 
     pub fn is_a_article(&self, word: &str) -> bool {
