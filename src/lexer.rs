@@ -1,4 +1,6 @@
-pub struct LexicalAnalyzer {
+use crate::traits::LexicalAnalyzer;
+
+pub struct Lexer {
     input: Vec<char>,
     position: usize,
     current_build: String,
@@ -8,7 +10,29 @@ pub struct LexicalAnalyzer {
     pub nouns: Vec<String>,
 }
 
-impl LexicalAnalyzer {
+impl LexicalAnalyzer for Lexer {
+    fn get_char(&mut self) -> char {
+        if self.position < self.input.len() {
+            let c = self.input[self.position];
+            self.position += 1;
+            c
+        } else {
+            '\0'
+        }
+    }
+
+    fn add_char(&mut self, c: char) {
+        self.current_build.push(c);
+    }
+
+    fn lookup(&self, word: &str) -> bool {
+        self.articles.iter().any(|a| a == word)
+            || self.nouns.iter().any(|n| n == word)
+            || self.verbs.iter().any(|v| v == word)
+    }
+}
+
+impl Lexer {
     pub fn new(input: &str) -> Self {
         let mut lexer = Self {
             input: input.chars().collect(),
@@ -23,20 +47,6 @@ impl LexicalAnalyzer {
         lexer.tokenize();
 
         lexer
-    }
-
-    pub fn get_char(&mut self) -> char {
-        if self.position < self.input.len() {
-            let c = self.input[self.position];
-            self.position += 1;
-            c
-        } else {
-            '\0'
-        }
-    }
-
-    pub fn add_char(&mut self, c: char) {
-        self.current_build.push(c);
     }
 
     pub fn tokenize(&mut self) {
@@ -63,45 +73,6 @@ impl LexicalAnalyzer {
         }
 
         self.tokens.reverse();
-    }
-
-    pub fn lookup(&mut self, word: &str) -> bool {
-        self.articles.iter().any(|a| a == word)
-            || self.nouns.iter().any(|n| n == word)
-            || self.verbs.iter().any(|v| v == word)
-    }
-
-    pub fn start(&mut self) -> String {
-        let candidate_token = self.tokens.pop().unwrap_or_default();
-
-        if self.lookup(&candidate_token) {
-            candidate_token
-        } else if !candidate_token.is_empty() {
-            eprintln!(
-                "A lexical error was encountered. '{}' is not a recognized token.",
-                candidate_token
-            );
-            std::process::exit(1);
-        } else {
-            eprintln!("A user error was encountered. The provided sentence is empty.");
-            std::process::exit(1);
-        }
-    }
-
-    pub fn next(&mut self) -> String {
-        let candidate_token = self.tokens.pop().unwrap_or_default();
-
-        if self.lookup(&candidate_token) {
-            candidate_token
-        } else if self.tokens.is_empty() {
-            "".to_string()
-        } else {
-            eprintln!(
-                "A lexical error was encountered. '{}' is not a recognized token.",
-                candidate_token
-            );
-            std::process::exit(1);
-        }
     }
 
     pub fn is_a_article(&self, word: &str) -> bool {
