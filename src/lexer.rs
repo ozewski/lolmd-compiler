@@ -5,7 +5,7 @@ pub struct Lexer {
     position: usize,
     current_build: String,
     tokens: Vec<String>,
-    pub keywords: Vec<String>,
+    keywords: Vec<String>,
 }
 
 impl LexicalAnalyzer for Lexer {
@@ -15,7 +15,10 @@ impl LexicalAnalyzer for Lexer {
             self.position += 1;
             c
         } else {
-            '\0'
+            eprintln!(
+                "Unexpected error: attempted to read past the end of the input.",
+            );
+            std::process::exit(1);
         }
     }
 
@@ -68,7 +71,6 @@ impl Lexer {
                 );
                 std::process::exit(1);
             }
-            self.tokens.push(lowered);        // canonical form for the parser
         } else {
             if !self.lookup(&word) {
                 eprintln!(
@@ -77,8 +79,8 @@ impl Lexer {
                 );
                 std::process::exit(1);
             }
-            self.tokens.push(word);           // text keeps its capitalization
         }
+        self.tokens.push(word);
     }
 
     pub fn tokenize(&mut self) {
