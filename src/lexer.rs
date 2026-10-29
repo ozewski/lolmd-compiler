@@ -5,9 +5,7 @@ pub struct Lexer {
     position: usize,
     current_build: String,
     tokens: Vec<String>,
-    pub articles: Vec<String>,
-    pub verbs: Vec<String>,
-    pub nouns: Vec<String>,
+    pub keywords: Vec<String>,
 }
 
 impl LexicalAnalyzer for Lexer {
@@ -26,22 +24,38 @@ impl LexicalAnalyzer for Lexer {
     }
 
     fn lookup(&self, word: &str) -> bool {
-        self.articles.iter().any(|a| a == word)
-            || self.nouns.iter().any(|n| n == word)
-            || self.verbs.iter().any(|v| v == word)
+        self.keywords.iter().any(|k| k == word)
     }
 }
 
 impl Lexer {
     pub fn new(input: &str) -> Self {
-        let mut lexer = Self {
+        let lexer = Self {
             input: input.chars().collect(),
             position: 0,
             current_build: String::new(),
             tokens: Vec::new(),
-            articles: vec!["a".into(), "teh".into()],
-            verbs: vec!["lovez".into(), "hatez".into(), "ates".into()],
-            nouns: vec!["dawg".into(), "kat".into(), "rat".into()],
+            keywords: vec![
+                "#hai".into(), 
+                "#kbye".into(),
+                "#obtw".into(),
+                "#tldr".into(),
+                "#maek".into(),
+                "#oic".into(),
+                "#gimmeh".into(),
+                "#mkay".into(),
+                "#newline".into(),
+                "#ihaz".into(),
+                "#itiz".into(),
+                "head".into(),
+                "title".into(),
+                "paragraf".into(),
+                "bold".into(),
+                "list".into(),
+                "item".into(),
+                "linx".into(),
+                "var".into()
+            ],
         };
 
         lexer
@@ -82,22 +96,10 @@ impl Lexer {
             "".to_string()
         } else {
             eprintln!(
-                "A lexical error was encountered. '{}' is not a recognized token.",
+                "Lexical error: '{}' is not a recognized token.",
                 candidate_token
             );
             std::process::exit(1);
         }
-    }
-
-    pub fn is_a_article(&self, word: &str) -> bool {
-        self.articles.iter().any(|a| a == word)
-    }
-
-    pub fn is_a_noun(&self, word: &str) -> bool {
-        self.nouns.iter().any(|n| n == word)
-    }
-
-    pub fn is_a_verb(&self, word: &str) -> bool {
-        self.verbs.iter().any(|v| v == word)
     }
 }
