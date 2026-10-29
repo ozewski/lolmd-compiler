@@ -24,7 +24,9 @@ impl LexicalAnalyzer for Lexer {
     }
 
     fn lookup(&self, word: &str) -> bool {
-        self.keywords.iter().any(|k| k == word)
+        let lower = word.to_lowercase();
+        self.keywords.iter().any(|k| k == &lower) 
+            || lower.chars().all(|c| Lexer::is_allowed(c))
     }
 }
 
@@ -47,32 +49,45 @@ impl Lexer {
                 "#newline".into(),
                 "#ihaz".into(),
                 "#itiz".into(),
-                "head".into(),
-                "title".into(),
-                "paragraf".into(),
-                "bold".into(),
-                "list".into(),
-                "item".into(),
-                "linx".into(),
-                "var".into()
             ],
         };
 
         lexer
     }
 
-    pub fn tokenize(&mut self) {
-        loop {
-            let c = self.get_char();
+    pub fn finish_token(&mut self) {
+        if self.current_build.is_empty() { return; }
+        let word = std::mem::take(&mut self.current_build);
+        let lowered = word.to_lowercase();
 
-            if c == '\0' {
-                break;
+        if word.starts_with('#') {
+            if !self.lookup(&lowered) {
+                eprintln!(
+                    "Lexical error: '{}' is not a recognized tag.",
+                    word
+                );
+                std::process::exit(1);
             }
+            self.tokens.push(lowered);        // canonical form for the parser
+        } else {
+            if !self.lookup(&word) {
+                eprintln!(
+                    "Lexical error: '{}' is not a recognized token.",
+                    word
+                );
+                std::process::exit(1);
+            }
+            self.tokens.push(word);           // text keeps its capitalization
+        }
+    }
+
+    pub fn tokenize(&mut self) {
+        while self.position < self.input.len() {
+            let c = self.get_char();
 
             if c.is_whitespace() {
                 if !self.current_build.is_empty() {
-                    self.tokens
-                        .push(std::mem::take(&mut self.current_build));
+                    self.finish_token();
                 }
             } else {
                 self.add_char(c);
@@ -80,8 +95,7 @@ impl Lexer {
         }
 
         if !self.current_build.is_empty() {
-            self.tokens
-                .push(std::mem::take(&mut self.current_build));
+            self.finish_token();
         }
 
         self.tokens.reverse();
@@ -89,17 +103,21 @@ impl Lexer {
 
     pub fn next(&mut self) -> String {
         let candidate_token = self.tokens.pop().unwrap_or_default();
+        // at this point, everything has already been validated by the lexer, so we can just return it
+        candidate_token
+    }
 
-        if self.lookup(&candidate_token) {
-            candidate_token
-        } else if self.tokens.is_empty() {
-            "".to_string()
-        } else {
-            eprintln!(
-                "Lexical error: '{}' is not a recognized token.",
-                candidate_token
-            );
-            std::process::exit(1);
-        }
+    pub fn is_allowed(c: char) -> bool {
+        c.is_ascii_alphanumeric() 
+        || c.is_whitespace()
+        || c == ',' 
+        || c == '.' 
+        || c == '?' 
+        || c == '!' 
+        || c == '%' 
+        || c == '=' 
+        || c == '/'
+        || c == '"'
+        || c == ':'
     }
 }
