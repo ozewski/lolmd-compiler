@@ -1,5 +1,3 @@
-use std::thread::current;
-
 use crate::{lexer::Lexer, traits::SyntaxAnalyzer};
 
 pub struct Parser<'a> {
@@ -29,6 +27,13 @@ impl<'a> Parser<'a> {
     fn error(&self, message: String) {
         eprintln!("Syntax error: {}", message);
         std::process::exit(1);
+    }
+
+    fn expected(&self, expected: &str) {
+        self.error(format!(
+            "Expected '{}', found '{}'",
+            expected, self.current_token
+        ));
     }
 
     // a few of the rules from the BNF were not in the trait.
@@ -63,19 +68,13 @@ impl<'a> Parser<'a> {
                 if self.current_token == "#oic" {
                     self.next_token();
                 } else {
-                    self.error(
-                        format!("Expected '#OIC', found '{}'", self.current_token)
-                    );
+                    self.expected("#OIC");
                 }
             } else {
-                self.error(
-                    format!("Expected 'ITEM', found '{}'", self.current_token)
-                );
+                self.expected("ITEM");
             }
         } else {
-            self.error(
-                format!("Expected '#GIMMEH', found '{}'", self.current_token)
-            );
+            self.expected("#GIMMEH");
         }
     }
 }
@@ -84,7 +83,7 @@ impl SyntaxAnalyzer for Parser<'_> {
     fn parse_lolcode(&mut self) {
         if self.current_token == "#hai" {
             self.next_token();
-            self.parse_comment();
+            self.parse_comments();
             self.parse_head();
             self.parse_optional_variable_define();
             self.parse_body();
@@ -92,14 +91,10 @@ impl SyntaxAnalyzer for Parser<'_> {
                 self.next_token();
                 // all we need is return here maybe? since there shouldn't be any next token
             } else {
-                self.error(
-                    format!("Expected '#KBYE', found '{}'", self.current_token)
-                );
+                self.expected("#KBYE");
             }
         } else {
-            self.error(
-                format!("Expected '#HAI', found '{}'", self.current_token)
-            );
+            self.expected("#HAI");
         }
     }
 
@@ -112,14 +107,10 @@ impl SyntaxAnalyzer for Parser<'_> {
                 if self.current_token == "#mkay" {
                     self.next_token();
                 } else {
-                    self.error(
-                        format!("Expected '#MKAY', found '{}'", self.current_token)
-                    );
+                    self.expected("#MKAY");
                 }
             } else {
-                self.error(
-                    format!("Expected 'HEAD', found '{}'", self.current_token)
-                );
+                self.expected("HEAD");
             }
         } else {
             // head is optional
@@ -135,19 +126,13 @@ impl SyntaxAnalyzer for Parser<'_> {
                 if self.current_token == "#oic" {
                     self.next_token();
                 } else {
-                    self.error(
-                        format!("Expected '#OIC', found '{}'", self.current_token)
-                    );
+                    self.expected("#OIC");
                 }
             } else {
-                self.error(
-                    format!("Expected 'TITLE', found '{}'", self.current_token)
-                );
+                self.expected("TITLE");
             }
         } else {
-            self.error(
-                format!("Expected '#GIMMEH', found '{}'", self.current_token)
-            );
+            self.expected("#GIMMEH");
         }
     }
 
@@ -158,9 +143,7 @@ impl SyntaxAnalyzer for Parser<'_> {
             if self.current_token == "#tldr" {
                 self.next_token();
             } else {
-                self.error(
-                    format!("Expected '#TLDR', found '{}'", self.current_token)
-                );
+                self.expected("#TLDR");
             }
         }
     }
@@ -179,19 +162,13 @@ impl SyntaxAnalyzer for Parser<'_> {
                 if self.current_token == "#mkay" {
                     self.next_token();
                 } else {
-                    self.error(
-                        format!("Expected '#MKAY', found '{}'", self.current_token)
-                    );
+                    self.expected("#MKAY");
                 }
             } else {
-                self.error(
-                    format!("Expected 'PARAGRAF', found '{}'", self.current_token)
-                );
+                self.expected("PARAGRAF");
             }
         } else {
-            self.error(
-                format!("Expected '#MAEK', found '{}'", self.current_token)
-            );
+            self.expected("#MAEK");
         }
     }
 
@@ -212,17 +189,22 @@ impl SyntaxAnalyzer for Parser<'_> {
             self.next_token();
             if self.current_token == "var" {
                 self.next_token();
-                self.parse_text();
-                // TODO: do we need to parse varname?
+                if self.lexer.is_varname(&self.current_token) {
+                    // TODO: do variable processing
+                    self.next_token();
+                    if self.current_token == "#oic" {
+                        self.next_token();
+                    } else {
+                        self.expected("#OIC");
+                    }
+                } else {
+                    self.error(format!("Expected variable, found '{}'", self.current_token));
+                }
             } else {
-                self.error(
-                    format!("Expected 'VAR', found '{}'", self.current_token)
-                );
+                self.expected("VAR");
             }
         } else {
-            self.error(
-                format!("Expected '#GIMMEH', found '{}'", self.current_token)
-            );
+            self.expected("#GIMMEH");
         }
     }
 
@@ -235,19 +217,13 @@ impl SyntaxAnalyzer for Parser<'_> {
                 if self.current_token == "#oic" {
                     self.next_token();
                 } else {
-                    self.error(
-                        format!("Expected '#OIC', found '{}'", self.current_token)
-                    );
+                    self.expected("#OIC");
                 }
             } else {
-                self.error(
-                    format!("Expected 'BOLD', found '{}'", self.current_token)
-                );
+                self.expected("BOLD");
             }
         } else {
-            self.error(
-                format!("Expected '#GIMMEH', found '{}'", self.current_token)
-            );
+            self.expected("#GIMMEH");
         }
     }
 
@@ -260,19 +236,13 @@ impl SyntaxAnalyzer for Parser<'_> {
                 if self.current_token == "#mkay" {
                     self.next_token();
                 } else {
-                    self.error(
-                        format!("Expected '#MKAY', found '{}'", self.current_token)
-                    );
+                    self.expected("#MKAY");
                 }
             } else {
-                self.error(
-                    format!("Expected 'LIST', found '{}'", self.current_token)
-                );
+                self.expected("LIST");
             }
         } else {
-            self.error(
-                format!("Expected '#MAEK', found '{}'", self.current_token)
-            );
+            self.expected("#MAEK");
         }
     }
 
@@ -295,13 +265,16 @@ impl SyntaxAnalyzer for Parser<'_> {
         if self.current_token == "#newline" {
             self.next_token();
         } else {
-            self.error(
-                format!("Expected '#NEWLINE', found '{}'", self.current_token)
-            );
+            self.expected("#NEWLINE");
         }
     }
 
     fn parse_text(&mut self) {
-
+        if !self.lexer.is_text(&self.current_token) {
+            self.error(format!("Expected text, found '{}'", self.current_token));
+        }
+        while self.lexer.is_text(&self.current_token) {
+            self.next_token();
+        }
     }
 }

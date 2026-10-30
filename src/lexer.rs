@@ -122,4 +122,12 @@ impl Lexer {
         || c == '"'
         || c == ':'
     }
+
+    pub fn is_text(&self, token: &str) -> bool {
+        !token.is_empty() && !token.starts_with('#')
+    }
+
+    pub fn is_varname(&self, token: &str) -> bool {
+        !token.is_empty() && token.chars().all(|c| c.is_ascii_alphabetic())
+    }
 }
