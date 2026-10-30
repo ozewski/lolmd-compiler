@@ -40,7 +40,9 @@ impl<'a> Parser<'a> {
     // these are those extra rules
 
     fn parse_optional_variable_define(&mut self) {
-
+        if self.current_token == "#ihaz" {
+            self.parse_variable_define();
+        }
     }
 
     fn parse_comments(&mut self) {
@@ -181,7 +183,27 @@ impl SyntaxAnalyzer for Parser<'_> {
     }
 
     fn parse_variable_define(&mut self) {
-
+        if self.current_token == "#ihaz" {
+            self.next_token();
+            if self.lexer.is_varname(&self.current_token) {
+                self.next_token();
+                if self.current_token == "#itiz" {
+                    self.next_token();
+                    self.parse_text(); // VARVALUE
+                    if self.current_token == "#mkay" {
+                        self.next_token();
+                    } else {
+                        self.expected("#MKAY");
+                    }
+                } else {
+                    self.expected("#ITIZ");
+                }
+            } else {
+                self.error(format!("Expected variable name, found '{}'", self.current_token));
+            }
+        } else {
+            self.expected("#IHAZ");
+        }
     }
 
     fn parse_variable_use(&mut self) {
@@ -258,7 +280,26 @@ impl SyntaxAnalyzer for Parser<'_> {
     }
 
     fn parse_link(&mut self) {
-
+        if self.current_token == "#gimmeh" {
+            self.next_token();
+            if self.current_token == "linx" {
+                self.next_token();
+                if self.lexer.is_text(&self.current_token) {
+                    self.next_token();
+                    if self.current_token == "#oic" {
+                        self.next_token();
+                    } else {
+                        self.expected("#OIC");
+                    }
+                } else {
+                    self.error(format!("Expected link text, found '{}'", self.current_token));
+                }
+            } else {
+                self.expected("LINK");
+            }
+        } else {
+            self.expected("#GIMMEH");
+        }
     }
 
     fn parse_newline(&mut self) {
