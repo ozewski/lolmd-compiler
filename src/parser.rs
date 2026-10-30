@@ -39,7 +39,10 @@ impl<'a> Parser<'a> {
     }
 
     fn parse_comments(&mut self) {
-
+        if self.current_token == "#OBTW" {
+            self.parse_comment();
+            self.parse_comments();
+        }
     }
 
     fn parse_inner_body(&mut self) {
@@ -48,6 +51,32 @@ impl<'a> Parser<'a> {
 
     fn parse_list_content(&mut self) {
 
+    }
+
+    fn parse_list_item(&mut self) {
+        if self.current_token == "#GIMMEH" {
+            self.next_token();
+            if self.current_token == "ITEM" {
+                self.next_token();
+                self.parse_optional_variable_define();
+                self.parse_inner_list();
+                if (self.current_token == "#OIC") {
+                    self.next_token();
+                } else {
+                    self.error(
+                        format!("Expected '#OIC', found '{}'", self.current_token)
+                    );
+                }
+            } else {
+                self.error(
+                    format!("Expected 'ITEM', found '{}'", self.current_token)
+                );
+            }
+        } else {
+            self.error(
+                format!("Expected '#GIMMEH', found '{}'", self.current_token)
+            );
+        }
     }
 }
 
@@ -141,7 +170,29 @@ impl SyntaxAnalyzer for Parser<'_> {
     }
 
     fn parse_paragraph(&mut self) {
-
+        if self.current_token == "#MAEK" {
+            self.next_token();
+            if self.current_token == "PARAGRAF" {
+                self.next_token();
+                self.parse_optional_variable_define();
+                self.parse_inner_paragraph();
+                if self.current_token == "#MKAY" {
+                    self.next_token();
+                } else {
+                    self.error(
+                        format!("Expected '#MKAY', found '{}'", self.current_token)
+                    );
+                }
+            } else {
+                self.error(
+                    format!("Expected 'PARAGRAF', found '{}'", self.current_token)
+                );
+            }
+        } else {
+            self.error(
+                format!("Expected '#MAEK', found '{}'", self.current_token)
+            );
+        }
     }
 
     fn parse_inner_paragraph(&mut self) {
@@ -157,15 +208,72 @@ impl SyntaxAnalyzer for Parser<'_> {
     }
 
     fn parse_variable_use(&mut self) {
-
+        if self.current_token == "#GIMMEH" {
+            self.next_token();
+            if self.current_token == "VAR" {
+                self.next_token();
+                self.parse_text();
+                // TODO: do we need to parse varname?
+            } else {
+                self.error(
+                    format!("Expected 'VAR', found '{}'", self.current_token)
+                );
+            }
+        } else {
+            self.error(
+                format!("Expected '#GIMMEH', found '{}'", self.current_token)
+            );
+        }
     }
 
     fn parse_bold(&mut self) {
-
+        if self.current_token == "#GIMMEH" {
+            self.next_token();
+            if self.current_token == "BOLD" {
+                self.next_token();
+                self.parse_text();
+                if self.current_token == "#OIC" {
+                    self.next_token();
+                } else {
+                    self.error(
+                        format!("Expected '#OIC', found '{}'", self.current_token)
+                    );
+                }
+            } else {
+                self.error(
+                    format!("Expected 'BOLD', found '{}'", self.current_token)
+                );
+            }
+        } else {
+            self.error(
+                format!("Expected '#GIMMEH', found '{}'", self.current_token)
+            );
+        }
     }
 
     fn parse_list(&mut self) {
-
+        if self.current_token == "#MAEK" {
+            self.next_token();
+            if self.current_token == "LIST" {
+                self.next_token();
+                self.parse_list_items();
+                if self.current_token == "#MKAY" {
+                    self.next_token();
+                } else {
+                    self.error(
+                        format!("Expected '#MKAY', found '{}'", self.current_token)
+                    );
+                }
+            } else {
+                self.error(
+                    format!("Expected 'LIST', found '{}'", self.current_token)
+                );
+            }
+        } else {
+            self.error(
+                format!("Expected '#MAEK', found '{}'", self.current_token)
+            );
+        }
     }
 
     fn parse_list_items(&mut self) {
