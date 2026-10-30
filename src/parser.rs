@@ -31,7 +31,22 @@ impl<'a> Parser<'a> {
         std::process::exit(1);
     }
 
+    // a few of the rules from the BNF were not in the trait.
+    // these are those extra rules
+
     fn parse_optional_variable_define(&mut self) {
+
+    }
+
+    fn parse_comments(&mut self) {
+
+    }
+
+    fn parse_inner_body(&mut self) {
+
+    }
+
+    fn parse_list_content(&mut self) {
 
     }
 }
@@ -49,26 +64,76 @@ impl SyntaxAnalyzer for Parser<'_> {
                 // all we need is return here maybe? since there shouldn't be any next token
             } else {
                 self.error(
-                    format!("Expected '#kbye', found '{}'", self.current_token)
+                    format!("Expected '#KBYE', found '{}'", self.current_token)
                 );
             }
         } else {
             self.error(
-                format!("Expected '#hai', found '{}'", self.current_token)
+                format!("Expected '#HAI', found '{}'", self.current_token)
             );
         }
     }
 
     fn parse_head(&mut self) {
-
+        if self.current_token == "#MAEK" {
+            self.next_token();
+            if self.current_token == "HEAD" {
+                self.next_token();
+                self.parse_title();
+                if self.current_token == "#MKAY" {
+                    self.next_token();
+                } else {
+                    self.error(
+                        format!("Expected '#MKAY', found '{}'", self.current_token)
+                    );
+                }
+            } else {
+                self.error(
+                    format!("Expected 'HEAD', found '{}'", self.current_token)
+                );
+            }
+        } else {
+            // head is optional
+        }
     }
 
     fn parse_title(&mut self) {
-
+        if self.current_token == "#GIMMEH" {
+            self.next_token();
+            if self.current_token == "TITLE" {
+                self.next_token();
+                self.parse_text();
+                if self.current_token == "#OIC" {
+                    self.next_token();
+                } else {
+                    self.error(
+                        format!("Expected '#OIC', found '{}'", self.current_token)
+                    );
+                }
+            } else {
+                self.error(
+                    format!("Expected 'TITLE', found '{}'", self.current_token)
+                );
+            }
+        } else {
+            self.error(
+                format!("Expected '#GIMMEH', found '{}'", self.current_token)
+            );
+        }
     }
 
     fn parse_comment(&mut self) {
-
+        if self.current_token == "#OBTW" {
+            self.next_token();
+            self.parse_text();
+            if self.current_token == "#TLDR" {
+                self.next_token();
+            } else {
+                self.error(
+                    format!("Expected '#TLDR', found '{}'", self.current_token)
+                );
+            }
+        }
     }
 
     fn parse_body(&mut self) {
