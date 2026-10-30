@@ -24,29 +24,34 @@ impl<'a> Parser<'a> {
         self.parse_lolcode();
     }
 
-    fn error(&self, message: String) {
+    fn error(&self, message: String) -> ! {
         eprintln!("Syntax error: {}", message);
         std::process::exit(1);
     }
 
-    fn expected(&self, expected: &str) {
+    fn expected(&self, expected: &str) -> ! {
         self.error(format!(
             "Expected '{}', found '{}'",
             expected, self.current_token
         ));
     }
 
+    fn is(&self, kw: &str) -> bool {
+        // case-insensitive checker
+        self.current_token.eq_ignore_ascii_case(kw)
+    }
+
     // a few of the rules from the BNF were not in the trait.
     // these are those extra rules
 
     fn parse_optional_variable_define(&mut self) {
-        if self.current_token == "#ihaz" {
+        if self.is("#ihaz") {
             self.parse_variable_define();
         }
     }
 
     fn parse_comments(&mut self) {
-        if self.current_token == "#obtw" {
+        if self.is("#obtw") {
             self.parse_comment();
             self.parse_comments();
         }
@@ -61,13 +66,13 @@ impl<'a> Parser<'a> {
     }
 
     fn parse_list_item(&mut self) {
-        if self.current_token == "#gimmeh" {
+        if self.is("#gimmeh") {
             self.next_token();
-            if self.current_token == "item" {
+            if self.is("item") {
                 self.next_token();
                 self.parse_optional_variable_define();
                 self.parse_inner_list();
-                if self.current_token == "#oic" {
+                if self.is("#oic") {
                     self.next_token();
                 } else {
                     self.expected("#OIC");
@@ -83,13 +88,13 @@ impl<'a> Parser<'a> {
 
 impl SyntaxAnalyzer for Parser<'_> {
     fn parse_lolcode(&mut self) {
-        if self.current_token == "#hai" {
+        if self.is("#hai") {
             self.next_token();
             self.parse_comments();
             self.parse_head();
             self.parse_optional_variable_define();
             self.parse_body();
-            if self.current_token == "#kbye" {
+            if self.is("#kbye") {
                 self.next_token();
                 // all we need is return here maybe? since there shouldn't be any next token
             } else {
@@ -101,12 +106,12 @@ impl SyntaxAnalyzer for Parser<'_> {
     }
 
     fn parse_head(&mut self) {
-        if self.current_token == "#maek" {
+        if self.is("#maek") {
             self.next_token();
-            if self.current_token == "head" {
+            if self.is("head") {
                 self.next_token();
                 self.parse_title();
-                if self.current_token == "#mkay" {
+                if self.is("#mkay") {
                     self.next_token();
                 } else {
                     self.expected("#MKAY");
@@ -120,12 +125,12 @@ impl SyntaxAnalyzer for Parser<'_> {
     }
 
     fn parse_title(&mut self) {
-        if self.current_token == "#gimmeh" {
+        if self.is("#gimmeh") {
             self.next_token();
-            if self.current_token == "title" {
+            if self.is("title") {
                 self.next_token();
                 self.parse_text();
-                if self.current_token == "#oic" {
+                if self.is("#oic") {
                     self.next_token();
                 } else {
                     self.expected("#OIC");
@@ -139,10 +144,10 @@ impl SyntaxAnalyzer for Parser<'_> {
     }
 
     fn parse_comment(&mut self) {
-        if self.current_token == "#obtw" {
+        if self.is("#obtw") {
             self.next_token();
             self.parse_text();
-            if self.current_token == "#tldr" {
+            if self.is("#tldr") {
                 self.next_token();
             } else {
                 self.expected("#TLDR");
@@ -155,13 +160,13 @@ impl SyntaxAnalyzer for Parser<'_> {
     }
 
     fn parse_paragraph(&mut self) {
-        if self.current_token == "#maek" {
+        if self.is("#maek") {
             self.next_token();
-            if self.current_token == "paragraf" {
+            if self.is("paragraf") {
                 self.next_token();
                 self.parse_optional_variable_define();
                 self.parse_inner_paragraph();
-                if self.current_token == "#mkay" {
+                if self.is("#mkay") {
                     self.next_token();
                 } else {
                     self.expected("#MKAY");
@@ -183,14 +188,14 @@ impl SyntaxAnalyzer for Parser<'_> {
     }
 
     fn parse_variable_define(&mut self) {
-        if self.current_token == "#ihaz" {
+        if self.is("#ihaz") {
             self.next_token();
             if self.lexer.is_varname(&self.current_token) {
                 self.next_token();
-                if self.current_token == "#itiz" {
+                if self.is("#itiz") {
                     self.next_token();
                     self.parse_text(); // VARVALUE
-                    if self.current_token == "#mkay" {
+                    if self.is("#mkay") {
                         self.next_token();
                     } else {
                         self.expected("#MKAY");
@@ -207,14 +212,14 @@ impl SyntaxAnalyzer for Parser<'_> {
     }
 
     fn parse_variable_use(&mut self) {
-        if self.current_token == "#gimmeh" {
+        if self.is("#gimmeh") {
             self.next_token();
-            if self.current_token == "var" {
+            if self.is("var") {
                 self.next_token();
                 if self.lexer.is_varname(&self.current_token) {
                     // TODO: do variable processing
                     self.next_token();
-                    if self.current_token == "#oic" {
+                    if self.is("#oic") {
                         self.next_token();
                     } else {
                         self.expected("#OIC");
@@ -231,12 +236,12 @@ impl SyntaxAnalyzer for Parser<'_> {
     }
 
     fn parse_bold(&mut self) {
-        if self.current_token == "#gimmeh" {
+        if self.is("#gimmeh") {
             self.next_token();
-            if self.current_token == "bold" {
+            if self.is("bold") {
                 self.next_token();
                 self.parse_text();
-                if self.current_token == "#oic" {
+                if self.is("#oic") {
                     self.next_token();
                 } else {
                     self.expected("#OIC");
@@ -250,12 +255,13 @@ impl SyntaxAnalyzer for Parser<'_> {
     }
 
     fn parse_list(&mut self) {
-        if self.current_token == "#maek" {
+        if self.is("#maek") {
             self.next_token();
-            if self.current_token == "list" {
+            if self.is("list") {
                 self.next_token();
+                // do we really need self.parse_list_item() here?
                 self.parse_list_items();
-                if self.current_token == "#mkay" {
+                if self.is("#mkay") {
                     self.next_token();
                 } else {
                     self.expected("#MKAY");
@@ -269,7 +275,7 @@ impl SyntaxAnalyzer for Parser<'_> {
     }
 
     fn parse_list_items(&mut self) {
-        if self.current_token == "#gimmeh" {
+        if self.is("#gimmeh") {
             self.parse_list_item();
             self.parse_list_items();
         }
@@ -280,22 +286,22 @@ impl SyntaxAnalyzer for Parser<'_> {
     }
 
     fn parse_link(&mut self) {
-        if self.current_token == "#gimmeh" {
+        if self.is("#gimmeh") {
             self.next_token();
-            if self.current_token == "linx" {
+            if self.is("linx") {
                 self.next_token();
                 if self.lexer.is_text(&self.current_token) {
                     self.next_token();
-                    if self.current_token == "#oic" {
+                    if self.is("#oic") {
                         self.next_token();
                     } else {
                         self.expected("#OIC");
                     }
                 } else {
-                    self.error(format!("Expected link text, found '{}'", self.current_token));
+                    self.error(format!("Expected link address, found '{}'", self.current_token));
                 }
             } else {
-                self.expected("LINK");
+                self.expected("LINX");
             }
         } else {
             self.expected("#GIMMEH");
@@ -303,7 +309,7 @@ impl SyntaxAnalyzer for Parser<'_> {
     }
 
     fn parse_newline(&mut self) {
-        if self.current_token == "#newline" {
+        if self.is("#newline") {
             self.next_token();
         } else {
             self.expected("#NEWLINE");
