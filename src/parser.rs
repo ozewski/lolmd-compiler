@@ -66,22 +66,17 @@ impl<'a> Parser<'a> {
     }
 
     fn parse_list_item(&mut self) {
-        if self.is("#gimmeh") {
+        if self.is("#gimmeh item") {
             self.next_token();
-            if self.is("item") {
+            self.parse_optional_variable_define();
+            self.parse_inner_list();
+            if self.is("#oic") {
                 self.next_token();
-                self.parse_optional_variable_define();
-                self.parse_inner_list();
-                if self.is("#oic") {
-                    self.next_token();
-                } else {
-                    self.expected("#OIC");
-                }
             } else {
-                self.expected("ITEM");
+                self.expected("#OIC");
             }
         } else {
-            self.expected("#GIMMEH");
+            self.expected("#GIMMEH ITEM");
         }
     }
 }
@@ -106,18 +101,13 @@ impl SyntaxAnalyzer for Parser<'_> {
     }
 
     fn parse_head(&mut self) {
-        if self.is("#maek") {
+        if self.is("#maek head"){
             self.next_token();
-            if self.is("head") {
+            self.parse_title();
+            if self.is("#mkay") {
                 self.next_token();
-                self.parse_title();
-                if self.is("#mkay") {
-                    self.next_token();
-                } else {
-                    self.expected("#MKAY");
-                }
             } else {
-                self.expected("HEAD");
+                self.expected("#MKAY");
             }
         } else {
             // head is optional
@@ -125,21 +115,16 @@ impl SyntaxAnalyzer for Parser<'_> {
     }
 
     fn parse_title(&mut self) {
-        if self.is("#gimmeh") {
+        if self.is("#gimmeh title") {
             self.next_token();
-            if self.is("title") {
+            self.parse_text();
+            if self.is("#oic") {
                 self.next_token();
-                self.parse_text();
-                if self.is("#oic") {
-                    self.next_token();
-                } else {
-                    self.expected("#OIC");
-                }
             } else {
-                self.expected("TITLE");
+                self.expected("#OIC");
             }
         } else {
-            self.expected("#GIMMEH");
+            self.expected("#GIMMEH TITLE");
         }
     }
 
@@ -160,22 +145,17 @@ impl SyntaxAnalyzer for Parser<'_> {
     }
 
     fn parse_paragraph(&mut self) {
-        if self.is("#maek") {
+        if self.is("#maek paragraf") {
             self.next_token();
-            if self.is("paragraf") {
+            self.parse_optional_variable_define();
+            self.parse_inner_paragraph();
+            if self.is("#mkay") {
                 self.next_token();
-                self.parse_optional_variable_define();
-                self.parse_inner_paragraph();
-                if self.is("#mkay") {
-                    self.next_token();
-                } else {
-                    self.expected("#MKAY");
-                }
             } else {
-                self.expected("PARAGRAF");
+                self.expected("#MKAY");
             }
         } else {
-            self.expected("#MAEK");
+            self.expected("#MAEK PARAGRAF");
         }
     }
 
@@ -212,70 +192,55 @@ impl SyntaxAnalyzer for Parser<'_> {
     }
 
     fn parse_variable_use(&mut self) {
-        if self.is("#gimmeh") {
+        if self.is("#gimmeh var") {
             self.next_token();
-            if self.is("var") {
+            if self.lexer.is_varname(&self.current_token) {
+                // TODO: do variable processing
                 self.next_token();
-                if self.lexer.is_varname(&self.current_token) {
-                    // TODO: do variable processing
-                    self.next_token();
-                    if self.is("#oic") {
-                        self.next_token();
-                    } else {
-                        self.expected("#OIC");
-                    }
-                } else {
-                    self.error(format!("Expected variable, found '{}'", self.current_token));
-                }
-            } else {
-                self.expected("VAR");
-            }
-        } else {
-            self.expected("#GIMMEH");
-        }
-    }
-
-    fn parse_bold(&mut self) {
-        if self.is("#gimmeh") {
-            self.next_token();
-            if self.is("bold") {
-                self.next_token();
-                self.parse_text();
                 if self.is("#oic") {
                     self.next_token();
                 } else {
                     self.expected("#OIC");
                 }
             } else {
-                self.expected("BOLD");
+                self.error(format!("Expected variable, found '{}'", self.current_token));
             }
         } else {
-            self.expected("#GIMMEH");
+            self.expected("#GIMMEH VAR");
+        }
+    }
+
+    fn parse_bold(&mut self) {
+        if self.is("#gimmeh bold") {
+            self.next_token();
+            self.parse_text();
+            if self.is("#oic") {
+                self.next_token();
+            } else {
+                self.expected("#OIC");
+            }
+        } else {
+            self.expected("#GIMMEH BOLD");
         }
     }
 
     fn parse_list(&mut self) {
-        if self.is("#maek") {
+        if self.is("#maek list") {
             self.next_token();
-            if self.is("list") {
+            self.parse_list_item(); // at least one list item is required
+            self.parse_list_items();
+            if self.is("#mkay") {
                 self.next_token();
-                // do we really need self.parse_list_item() here?
-                self.parse_list_items();
-                if self.is("#mkay") {
-                    self.next_token();
-                } else {
-                    self.expected("#MKAY");
-                }
             } else {
-                self.expected("LIST");
+                self.expected("#MKAY");
             }
         } else {
-            self.expected("#MAEK");
+            self.expected("#MAEK LIST");
         }
     }
 
     fn parse_list_items(&mut self) {
-        if self.is("#gimmeh") {
+        if self.is("#gimmeh item") {
             self.parse_list_item();
             self.parse_list_items();
         }
@@ -286,25 +251,20 @@ impl SyntaxAnalyzer for Parser<'_> {
     }
 
     fn parse_link(&mut self) {
-        if self.is("#gimmeh") {
+        if self.is("#gimmeh linx") {
             self.next_token();
-            if self.is("linx") {
+            if self.lexer.is_text(&self.current_token) {
                 self.next_token();
-                if self.lexer.is_text(&self.current_token) {
+                if self.is("#oic") {
                     self.next_token();
-                    if self.is("#oic") {
-                        self.next_token();
-                    } else {
-                        self.expected("#OIC");
-                    }
                 } else {
-                    self.error(format!("Expected link address, found '{}'", self.current_token));
+                    self.expected("#OIC");
                 }
             } else {
-                self.expected("LINX");
+                self.error(format!("Expected link address, found '{}'", self.current_token));
             }
         } else {
-            self.expected("#GIMMEH");
+            self.expected("#GIMMEH LINX");
         }
     }
 

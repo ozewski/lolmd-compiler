@@ -52,6 +52,14 @@ impl Lexer {
                 "#newline".into(),
                 "#ihaz".into(),
                 "#itiz".into(),
+                "#maek head".into(), 
+                "#maek paragraf".into(), 
+                "#maek list".into(),
+                "#gimmeh title".into(), 
+                "#gimmeh bold".into(), 
+                "#gimmeh item".into(),
+                "#gimmeh linx".into(), 
+                "#gimmeh var".into(),
             ],
         };
 
@@ -60,10 +68,17 @@ impl Lexer {
 
     pub fn finish_token(&mut self) {
         if self.current_build.is_empty() { return; }
-        let word = std::mem::take(&mut self.current_build);
-        let lowered = word.to_lowercase();
+        let mut word = std::mem::take(&mut self.current_build);
+        let mut lowered = word.to_lowercase();
 
         if word.starts_with('#') {
+            if word == "#maek" || word == "#gimmeh" {
+                // these are two-word keywords, so we need to look ahead
+                self.read_word();
+                word = format!("{} {}", word, std::mem::take(&mut self.current_build));
+                lowered = word.to_lowercase();
+            }
+
             if !self.lookup(&lowered) {
                 eprintln!(
                     "Lexical error: '{}' is not a recognized tag.",
@@ -80,26 +95,30 @@ impl Lexer {
                 std::process::exit(1);
             }
         }
+
         self.tokens.push(word);
     }
 
-    pub fn tokenize(&mut self) {
+    fn read_word(&mut self)  {
         while self.position < self.input.len() {
-            let c = self.get_char();
-
-            if c.is_whitespace() {
-                if !self.current_build.is_empty() {
-                    self.finish_token();
-                }
-            } else {
-                self.add_char(c);
+        let c = self.get_char();
+        if c.is_whitespace() {
+            if !self.current_build.is_empty() {
+                break; // word finished
             }
+        } else {
+            self.add_char(c);
         }
+    }
 
-        if !self.current_build.is_empty() {
+    pub fn tokenize(&mut self) {
+        loop {
+            self.read_word();
+            if self.current_build.is_empty() {
+                break; // no more input
+            }
             self.finish_token();
         }
-
         self.tokens.reverse();
     }
 
