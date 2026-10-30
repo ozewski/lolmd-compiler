@@ -45,13 +45,12 @@ impl Lexer {
                 "#kbye".into(),
                 "#obtw".into(),
                 "#tldr".into(),
-                "#maek".into(),
                 "#oic".into(),
-                "#gimmeh".into(),
                 "#mkay".into(),
                 "#newline".into(),
                 "#ihaz".into(),
                 "#itiz".into(),
+                // maek and gimmeh are two-word tokens
                 "#maek head".into(), 
                 "#maek paragraf".into(), 
                 "#maek list".into(),
@@ -60,6 +59,10 @@ impl Lexer {
                 "#gimmeh item".into(),
                 "#gimmeh linx".into(), 
                 "#gimmeh var".into(),
+
+                // with the two-word versions, the single-word versions should never be accepted
+                // "#maek".into(),
+                // "#gimmeh".into(),
             ],
         };
 
@@ -72,7 +75,7 @@ impl Lexer {
         let mut lowered = word.to_lowercase();
 
         if word.starts_with('#') {
-            if word == "#maek" || word == "#gimmeh" {
+            if lowered == "#maek" || lowered == "#gimmeh" {
                 // these are two-word keywords, so we need to look ahead
                 self.read_word();
                 word = format!("{} {}", word, std::mem::take(&mut self.current_build));
@@ -101,13 +104,14 @@ impl Lexer {
 
     fn read_word(&mut self)  {
         while self.position < self.input.len() {
-        let c = self.get_char();
-        if c.is_whitespace() {
-            if !self.current_build.is_empty() {
-                break; // word finished
+            let c = self.get_char();
+            if c.is_whitespace() {
+                if !self.current_build.is_empty() {
+                    break; // word finished
+                }
+            } else {
+                self.add_char(c);
             }
-        } else {
-            self.add_char(c);
         }
     }
 

@@ -173,6 +173,8 @@ impl SyntaxAnalyzer for Parser<'_> {
             } else {
                 self.expected("#TLDR");
             }
+        } else {
+            self.expected("#OBTW");
         }
     }
 
