@@ -58,11 +58,43 @@ impl<'a> Parser<'a> {
     }
 
     fn parse_inner_body(&mut self) {
-
+        if self.is("#maek paragraf") {
+            self.parse_paragraph();
+        } else if self.is("#maek list") {
+            self.parse_list();
+        } else if self.is("#obtw") {
+            self.parse_comment();
+        } else if self.is("#gimmeh bold") {
+            self.parse_bold();
+        } else if self.is("#gimmeh linx") {
+            self.parse_link();
+        } else if self.is("#gimmeh var") {
+            self.parse_variable_use();
+        } else if self.is("#newline") {
+            self.parse_newline();
+        } else if self.lexer.is_text(&self.current_token) {
+            self.parse_text();
+        } else {
+            self.error(format!("Unexpected token '{}'", self.current_token));
+        }
     }
 
     fn parse_list_content(&mut self) {
-
+        if self.is("#obtw") {
+            self.parse_comment();
+        } else if self.is("#gimmeh bold") {
+            self.parse_bold();
+        } else if self.is("#gimmeh linx") {
+            self.parse_link();
+        } else if self.is("#gimmeh var") {
+            self.parse_variable_use();
+        } else if self.is("#newline") {
+            self.parse_newline();
+        } else if self.lexer.is_text(&self.current_token) {
+            self.parse_text();
+        } else {
+            self.error(format!("Unexpected token '{}'", self.current_token));
+        }
     }
 
     fn parse_list_item(&mut self) {
@@ -91,7 +123,11 @@ impl SyntaxAnalyzer for Parser<'_> {
             self.parse_body();
             if self.is("#kbye") {
                 self.next_token();
-                // all we need is return here maybe? since there shouldn't be any next token
+                if self.current_token.is_empty() {
+                    return;
+                } else {
+                    self.error(format!("Unexpected '{}' after '#KBYE'", self.current_token));
+                }
             } else {
                 self.expected("#KBYE");
             }
@@ -141,7 +177,18 @@ impl SyntaxAnalyzer for Parser<'_> {
     }
 
     fn parse_body(&mut self) {
-
+        if self.is("#maek paragraf")
+            || self.is("#maek list")
+            || self.is("#obtw")
+            || self.is("#gimmeh bold")
+            || self.is("#gimmeh linx")
+            || self.is("#gimmeh var")
+            || self.is("#newline")
+            || self.lexer.is_text(&self.current_token)
+        {
+            self.parse_inner_body();
+            self.parse_body();
+        }
     }
 
     fn parse_paragraph(&mut self) {
@@ -160,11 +207,39 @@ impl SyntaxAnalyzer for Parser<'_> {
     }
 
     fn parse_inner_paragraph(&mut self) {
-
+        if self.is("#maek list")
+            || self.is("#obtw")
+            || self.is("#gimmeh bold")
+            || self.is("#gimmeh linx")
+            || self.is("#gimmeh var")
+            || self.is("#newline")
+            || self.lexer.is_text(&self.current_token)
+            // same as the body, EXCEPT minus #MAEK PARAGRAF (paragraphs can't nest)
+        {
+            self.parse_inner_text();
+            self.parse_inner_paragraph();
+        }
+        // epsilon: next token should be #MKAY, which parse_paragraph checks for
     }
 
     fn parse_inner_text(&mut self) {
-
+        if self.is("#maek list") {
+            self.parse_list();
+        } else if self.is("#obtw") {
+            self.parse_comment();
+        } else if self.is("#gimmeh bold") {
+            self.parse_bold();
+        } else if self.is("#gimmeh linx") {
+            self.parse_link();
+        } else if self.is("#gimmeh var") {
+            self.parse_variable_use();
+        } else if self.is("#newline") {
+            self.parse_newline();
+        } else if self.lexer.is_text(&self.current_token) {
+            self.parse_text();
+        } else {
+            self.error(format!("Unexpected token '{}'", self.current_token));
+        }
     }
 
     fn parse_variable_define(&mut self) {
@@ -247,7 +322,16 @@ impl SyntaxAnalyzer for Parser<'_> {
     }
 
     fn parse_inner_list(&mut self) {
-
+        if self.is("#obtw")
+            || self.is("#gimmeh bold")
+            || self.is("#gimmeh linx")
+            || self.is("#gimmeh var")
+            || self.is("#newline")
+            || self.lexer.is_text(&self.current_token)
+        {
+            self.parse_list_content();
+            self.parse_inner_list();
+        }
     }
 
     fn parse_link(&mut self) {
