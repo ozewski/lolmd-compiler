@@ -1,4 +1,3 @@
-#[derive(Debug, Clone)]
 pub enum Node {
     // Open/close pairs (containers)
     DocOpen, DocClose,

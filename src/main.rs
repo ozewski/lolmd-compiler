@@ -7,6 +7,7 @@ mod ast;
 
 use std::{env, fs, path::Path, process};
 
+use crate::codegen::{open_in_browser, output_path, write_html};
 use crate::parser::Parser;
 use crate::scope::ScopeAnalyzer;
 use crate::traits::Compiler;
@@ -41,16 +42,13 @@ fn main() {
     parser.compile(&source);
     let nodes = parser.take_nodes();
 
-    for (i, node) in nodes.iter().enumerate() {
-        println!("{:3}: {:?}", i, node);
-    }
-
     let scoper = ScopeAnalyzer::new();
     let resolved = scoper.resolve(nodes);
 
-    for (i, node) in resolved.iter().enumerate() {
-        println!("{:3}: {:?}", i, node);
-    }
+    let path = &output_path(Path::new(path));
 
-    println!("OK: '{}' lexed and parsed successfully", path);
+    write_html(&resolved, path);
+    open_in_browser(path);
+
+    println!("Compilation successful. Output written to '{}'.", path.display());
 }

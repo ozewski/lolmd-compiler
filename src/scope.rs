@@ -21,7 +21,7 @@ impl ScopeAnalyzer {
         Self { defs: Vec::new(), marks: Vec::new(), output: Vec::new() }
     }
 
-    pub fn resolve(mut self, nodes: Vec<Node>) -> Result<Vec<Node>, String> {
+    pub fn resolve(mut self, nodes: Vec<Node>) -> Vec<Node> {
         for node in nodes {
             match node {
                 Node::DocOpen | Node::ParagraphOpen | Node::ItemOpen => {
@@ -29,8 +29,7 @@ impl ScopeAnalyzer {
                     self.output.push(node);
                 }
                 Node::DocClose | Node::ParagraphClose | Node::ItemClose => {
-                    let mark = self.marks.pop()
-                        .ok_or("internal error: block close without matching open")?;
+                    let mark = self.marks.pop().unwrap();
                     self.defs.truncate(mark);
                     self.output.push(node);
                 }
@@ -42,7 +41,7 @@ impl ScopeAnalyzer {
                         Some((_, value)) => self.output.push(Node::Text(value.clone())),
                         None => {
                             eprintln!(
-                                "Static semantic error: variable '{}' used before it is defined (or outside its scope)",
+                                "Static semantic error: variable '{}' used before it is defined",
                                 name
                             );
                             std::process::exit(1);
@@ -52,6 +51,6 @@ impl ScopeAnalyzer {
                 other => self.output.push(other),
             }
         }
-        Ok(self.output)
+        self.output
     }
 }
