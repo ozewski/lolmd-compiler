@@ -55,7 +55,7 @@ impl Parser {
 
     fn is(&self, kw: &str) -> bool {
         // case-insensitive checker
-        self.current_token.eq_ignore_ascii_case(kw)
+        self.current_token().eq_ignore_ascii_case(kw)
     }
 
     fn read_text(&mut self) -> String {
