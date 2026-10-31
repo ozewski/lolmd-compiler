@@ -1,47 +1,48 @@
-
 mod traits;
 mod lexer;
 mod parser;
 mod scope;
 mod codegen;
+mod ast;
+
+use std::{env, fs, path::Path, process};
 
 use crate::lexer::Lexer;
-
-/// Tokenize a snippet and print every token until the lexer runs dry.
-fn show_tokens(label: &str, source: &str) {
-    println!("--- {} ---", label);
-    let mut lexer = Lexer::new(source);
-    lexer.tokenize();
-
-    loop {
-        let tok = lexer.next();
-        if tok.is_empty() {
-            break; // empty string means end of input
-        }
-        println!("  [{}]", tok);
-    }
-    println!();
-}
+use crate::parser::Parser;
 
 fn main() {
-    // 1) Mixed-case keywords should come out lowercase
-    show_tokens("case normalization", "#HaI #KBYE");
+    // Exactly one argument: the input file
+    let args: Vec<String> = env::args().collect();
+    if args.len() != 2 {
+        eprintln!("Usage: lolcompiler <input.lol>");
+        process::exit(1);
+    }
+    let path = &args[1];
 
-    // 2) Text keeps its capitalization, even words that look like keywords
-    show_tokens("text preserved", "The Bold move, Simpsons!");
+    // The assignment requires a .lol extension
+    let has_lol_ext = Path::new(path)
+        .extension()
+        .map_or(false, |e| e.eq_ignore_ascii_case("lol"));
+    if !has_lol_ext {
+        eprintln!("Usage error: input file must have a .lol extension");
+        process::exit(1);
+    }
 
-    // 3) A small realistic snippet
-    show_tokens(
-        "mini document",
-        "#HAI\n#MAEK PARAGRAF\nHello World #GIMMEH BOLD Homer #OIC\n#MKAY\n#KBYE",
-    );
+    let source = match fs::read_to_string(path) {
+        Ok(s) => s,
+        Err(e) => {
+            eprintln!("Could not read '{}': {}", path, e);
+            process::exit(1);
+        }
+    };
 
-    // 4) Whitespace handling: tabs, blank lines, extra spaces
-    show_tokens("whitespace", "#hai\n\n\t  #newline   \n  #kbye");
+    // Phase 1: lexical analysis (exits on a lexical error)
+    let mut lexer = Lexer::new(&source);
+    lexer.tokenize();
 
-    // 5) Error cases exit the process, so run them one at a time.
-    //    Uncomment one, run, and check the message.
-    // show_tokens("bad tag", "#HAI #HEY #KBYE");
-    // show_tokens("bad character", "#HAI Hello@there #KBYE");
+    // Phase 2: syntax analysis (exits on a syntax error)
+    let mut parser = Parser::new(&mut lexer);
+    parser.parse();
+
+    println!("OK: '{}' lexed and parsed successfully", path);
 }
-
