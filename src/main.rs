@@ -8,6 +8,7 @@ mod ast;
 use std::{env, fs, path::Path, process};
 
 use crate::parser::Parser;
+use crate::scope::ScopeAnalyzer;
 use crate::traits::Compiler;
 
 fn main() {
@@ -44,8 +45,12 @@ fn main() {
         println!("{:3}: {:?}", i, node);
     }
 
-    //let scoper = ScopeAnalyzer::new();
-    //let resolved = scoper.resolve(nodes);
+    let scoper = ScopeAnalyzer::new();
+    let resolved = scoper.resolve(nodes);
+
+    for (i, node) in resolved.iter().enumerate() {
+        println!("{:3}: {:?}", i, node);
+    }
 
     println!("OK: '{}' lexed and parsed successfully", path);
 }
