@@ -7,8 +7,8 @@ mod ast;
 
 use std::{env, fs, path::Path, process};
 
-use crate::lexer::Lexer;
 use crate::parser::Parser;
+use crate::traits::Compiler;
 
 fn main() {
     // Exactly one argument: the input file
@@ -36,13 +36,16 @@ fn main() {
         }
     };
 
-    // Phase 1: lexical analysis (exits on a lexical error)
-    let mut lexer = Lexer::new(&source);
-    lexer.tokenize();
+    let mut parser = Parser::new();
+    parser.compile(&source);
+    let nodes = parser.take_nodes();
 
-    // Phase 2: syntax analysis (exits on a syntax error)
-    let mut parser = Parser::new(&mut lexer);
-    parser.parse();
+    for (i, node) in nodes.iter().enumerate() {
+        println!("{:3}: {:?}", i, node);
+    }
+
+    //let scoper = ScopeAnalyzer::new();
+    //let resolved = scoper.resolve(nodes);
 
     println!("OK: '{}' lexed and parsed successfully", path);
 }

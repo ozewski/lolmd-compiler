@@ -1,14 +1,17 @@
 #[derive(Debug, Clone)]
 pub enum Node {
+    // Open/close pairs (containers)
     DocOpen, DocClose,
-    Comment(String),
     HeadOpen, HeadClose,
-    Title(String),
+    TitleOpen, TitleClose,
+    CommentOpen, CommentClose,
     ParagraphOpen, ParagraphClose,
     ListOpen, ListClose,
     ItemOpen, ItemClose,
     BoldOpen, BoldClose,
-    Link(String),
+    LinkOpen, LinkClose,
+
+    // Single nodes (leaves)
     Newline,
     Text(String),
     VarDef { name: String, value: String },
